@@ -50,6 +50,8 @@ class ReorderableFlex extends StatefulWidget {
     this.buildDraggableFeedback,
     this.mainAxisAlignment = MainAxisAlignment.start,
     this.onNoReorder,
+    this.onDragStart,
+    this.onCurrentIndexChanged,
     this.scrollController,
     this.needsLongPressDraggable = true,
     this.draggingWidgetOpacity = 0.2,
@@ -92,6 +94,8 @@ class ReorderableFlex extends StatefulWidget {
   /// children.
   final ReorderCallback onReorder;
   final NoReorderCallback onNoReorder;
+  final VoidCallback onDragStart;
+  final void Function(int currentIndex) onCurrentIndexChanged;
 
   final BuildItemsContainer buildItemsContainer;
   final BuildDraggableFeedback buildDraggableFeedback;
@@ -140,6 +144,8 @@ class _ReorderableFlexState extends State<ReorderableFlex> {
           scrollDirection: widget.scrollDirection,
           onReorder: widget.onReorder,
           onNoReorder: widget.onNoReorder,
+            onDragStart: widget.onDragStart,
+            onCurrentIndexChanged: widget.onCurrentIndexChanged,
           padding: widget.padding,
           buildItemsContainer: widget.buildItemsContainer,
           buildDraggableFeedback: widget.buildDraggableFeedback,
@@ -179,6 +185,8 @@ class _ReorderableFlexContent extends StatefulWidget {
     @required this.padding,
     @required this.onReorder,
     @required this.onNoReorder,
+    @required this.onDragStart,
+    @required this.onCurrentIndexChanged,
     @required this.buildItemsContainer,
     @required this.buildDraggableFeedback,
     @required this.mainAxisAlignment,
@@ -198,7 +206,9 @@ class _ReorderableFlexContent extends StatefulWidget {
   final EdgeInsets padding;
   final ReorderCallback onReorder;
   final NoReorderCallback onNoReorder;
-  final BuildItemsContainer buildItemsContainer;
+final VoidCallback onDragStart;
+final void Function(int currentIndex) onCurrentIndexChanged;
+final BuildItemsContainer buildItemsContainer;
   final BuildDraggableFeedback buildDraggableFeedback;
 
   final MainAxisAlignment mainAxisAlignment;
@@ -347,6 +357,8 @@ class _ReorderableFlexContentState extends State<_ReorderableFlexContent>
       }
 
       _currentIndex = _nextIndex;
+      if (widget.onCurrentIndexChanged != null)
+        widget.onCurrentIndexChanged(_currentIndex);
       _ghostController.reverse(from: 1.0);
       _entranceController.forward(from: 0.0);
     }
@@ -434,12 +446,15 @@ class _ReorderableFlexContentState extends State<_ReorderableFlexContent>
 
     // Starts dragging toWrap.
     void onDragStarted() {
+      if (widget.onDragStart != null) widget.onDragStart();
       setState(() {
         _draggingWidget = toWrap;
         _dragging = toWrap.key;
         _dragStartIndex = index;
         _ghostIndex = index;
         _currentIndex = index;
+        if (widget.onCurrentIndexChanged != null)
+          widget.onCurrentIndexChanged(_currentIndex);
         _entranceController.value = 1.0;
         _draggingFeedbackSize = keyIndexGlobalKey.currentContext.size;
       });
@@ -475,6 +490,8 @@ class _ReorderableFlexContentState extends State<_ReorderableFlexContent>
         _dragStartIndex = -1;
         _ghostIndex = -1;
         _currentIndex = -1;
+        if (widget.onCurrentIndexChanged != null)
+          widget.onCurrentIndexChanged(_currentIndex);
         _draggingWidget = null;
       });
     }
@@ -1050,6 +1067,8 @@ class ReorderableColumn extends ReorderableFlex {
     TextDirection textDirection,
     VerticalDirection verticalDirection = VerticalDirection.down,
     TextBaseline textBaseline,
+  VoidCallback onDragStart,
+  void Function(int currentIndex) onCurrentIndexChanged,
     List<Widget> children = const <Widget>[],
     BuildDraggableFeedback buildDraggableFeedback,
     NoReorderCallback onNoReorder,
@@ -1066,6 +1085,8 @@ class ReorderableColumn extends ReorderableFlex {
             children: children,
             onReorder: onReorder,
             onNoReorder: onNoReorder,
+            onDragStart: onDragStart,
+            onCurrentIndexChanged: onCurrentIndexChanged,
             direction: Axis.vertical,
             padding: padding,
             buildItemsContainer:
